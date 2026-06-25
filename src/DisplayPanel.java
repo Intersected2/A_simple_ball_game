@@ -1,0 +1,271 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class DisplayPanel extends JPanel implements MouseListener, KeyListener, ActionListener, MouseMotionListener {
+    private Point mpos;
+    private int mousex;
+    private int mousey;
+    private Timer mainT;
+    private int mode;
+    private int modequeue;
+    private Hitbox mousehit;
+    private Hitbox players2;
+    private Hitbox player1;
+    private Hitbox player2;
+    private Hitbox ball;
+    private int p1x;
+    private int p1y;
+    private int p2x;
+    private int p2y;
+    private boolean inital = true;
+    private Timer mode_0;
+    private int startside;
+    private int velocityx; //ball
+    private int velocityy;
+    private int v1;  //sliders
+    private int v2;
+    private Timer time;
+    private int ballx;
+    private int bally;
+    private boolean gameend;
+    private boolean start;
+
+    public DisplayPanel(){
+        addMouseListener(this);
+        addKeyListener(this);
+        addMouseMotionListener(this);
+        setFocusable(true);
+        requestFocusInWindow();
+        mode = 1;
+        mainT = new Timer(10, this);
+        time = new Timer(10, this);
+        int ram = (int) (Math.random() * 5000) + 5000;
+        mode_0 = new Timer(ram, this);
+        mainT.start();
+        time.start();
+        this.mousehit = new Hitbox(mousex, mousey, 1, 1);  //hitbox for mouse
+    }
+    @Override
+    public void paint(Graphics g){
+        if (inital){ // only runs once (for hitboxes create the objects here)
+            ballx = getWidth() / 2 - 15;
+            bally = getHeight() / 2 - 15;
+            velocityx = 0;
+            p1x = 100;
+            p1y = getHeight() / 2 - 50;
+            p2x = getWidth() - 100;
+            p2y = getHeight() / 2 - 50;
+            this.players2 = new Hitbox(getWidth() / 4, getHeight() / 2, 300, 150); // button for 1 player
+            this.player1 = new Hitbox(p1x, p1y, 30, 100);
+            this.player2 = new Hitbox(p2x, p2y, 30, 100);
+            this.ball = new Hitbox(ballx, bally, 30, 30);
+            if (getStartside()){
+                startside = 1;
+            }else{
+                startside = -1;
+            }
+            velocityx *= startside;
+            inital = false;
+        }
+        if (mode == 0){
+            mode0(g);
+        }
+        if (mode == 1){
+            mode1(g);
+        }
+        if (mode == 2){
+            mode2(g);
+        }
+    }
+    public void mode0(Graphics g){
+        int ram;
+        super.paintComponent(g);
+        g.fillRect(0, 0, getWidth(), getHeight());
+        g.setColor(Color.white);
+        g.setFont(new Font("Arial", Font.PLAIN, 30));
+        ram = g.getFontMetrics().stringWidth("Loading...");
+        g.drawString("Loading...", getWidth() / 2 - ram / 2, getHeight() / 3);
+    }
+    public void mode1(Graphics g){ //menu
+        int ram;
+        super.paintComponent(g);
+        g.setColor(new Color(70, 154, 223, 255));
+        g.fillRect(getWidth() / 4, getHeight() / 2, 300, 150);
+        g.setColor(Color.black);
+        g.setFont(new Font("Arial", Font.PLAIN, 30));
+        ram = g.getFontMetrics().stringWidth("2 players");
+        g.drawString("2 players", getWidth() / 4 + 150 - ram / 2, getHeight() / 2 + 80);
+
+    }
+    public void mode2(Graphics g){ //displays what happens when game starts
+        int ram;
+        super.paintComponent(g);
+        g.setFont(new Font("Arial", Font.PLAIN, 12));
+        ram = g.getFontMetrics().stringWidth(mousex + " " + mousey);
+        g.drawString(String.valueOf(mousex) + " " + String.valueOf(mousey), getWidth() / 2 - ram / 2, getHeight() / 150 + 7);
+        g.drawLine(getWidth() / 2, getHeight(), getWidth() / 2, 0);
+        g.setColor(new Color(70, 154, 223, 255));
+        g.fillRect(p1x, p1y, 30, 100);
+        g.setColor(new Color(237, 80, 80, 255));
+        g.fillRect(p2x, p2y, 30, 100);
+        g.setColor(Color.black);
+        g.fillOval(ballx, bally, 30, 30);
+    }
+    public void mode3(){ // endscreen
+
+    }
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        int ram1 = p1y;
+        int ram2 = p2y;
+        if (e.getSource() == mainT){
+            mousehit.changehitpos(mousex, mousey);
+            ballLogic();
+            repaint();
+        }
+        if (e.getSource() == mode_0){
+            mode = modequeue;
+            displayedornot();
+            mode_0.stop();
+        }
+        if (e.getSource() == time){
+            p1y += v1;
+            if(p1y < 0){
+                v1 = 0;
+                p1y = 0;
+            }
+            if (p1y > getHeight() - 100){
+                v1 = 0;
+                p1y = getHeight() - 100;
+            }
+            p2y += v2;
+            if(p2y < 0){
+                v2 = 0;
+                p2y = 0;
+            }
+            if (p2y > getHeight() - 100){
+                v2 = 0;
+                p2y = getHeight() - 100;
+            }
+            if (mode == 2 && start){
+                ball.changehitpos(ballx, bally);
+            }
+        }
+    }
+    @Override
+    public void keyTyped(KeyEvent e) {
+
+    }
+    @Override
+    public void keyPressed(KeyEvent e) {
+        int ram = e.getKeyCode();
+        if (ram == KeyEvent.VK_A){
+            v1 = -5;
+        }
+        if (ram == KeyEvent.VK_D){
+            v1 = 5;
+        }
+        if (ram == KeyEvent.VK_LEFT){
+            v2 = -5;
+        }
+        if (ram == KeyEvent.VK_RIGHT){
+            v2 = 5;
+        }
+        player1.changehitpos(p1x, p1y);
+        player2.changehitpos(p2x, p2y);
+    }
+    @Override
+    public void keyReleased(KeyEvent e) {
+//        int ram = e.getKeyCode();
+//        if (ram == KeyEvent.VK_A){
+//            v1 = 0;
+//        }
+//        if (ram == KeyEvent.VK_D){
+//            v1 = 0;
+//        }
+//        if (ram == KeyEvent.VK_LEFT){
+//            v2 = 0;
+//        }
+//        if (ram == KeyEvent.VK_RIGHT){
+//            v2 = 0;
+//        }
+    }
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        if (mousehit.getvisibility() && mousehit.getHitbox().intersects(players2.getHitbox())){
+            mode = 0;
+            modequeue = 2;
+            start = true;
+            displayedornot();
+            mode_0.start();
+        }
+    }
+    @Override
+    public void mousePressed(MouseEvent e) {
+
+    }
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+    }
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+    @Override
+    public void mouseExited(MouseEvent e) {
+
+    }
+    @Override
+    public void mouseDragged(MouseEvent e) {
+
+    }
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        mpos = e.getPoint();
+        mousex = (int) mpos.getX();
+        mousey = (int) mpos.getY();
+    }
+    public void displayedornot(){
+        if (mode == 0){
+            mousehit.setvisibilityfalse();
+            players2.setvisibilityfalse();
+            player1.setvisibilityfalse();
+            player2.setvisibilityfalse();
+        }else{
+            if (mode == 1){
+                mousehit.setvisibilitytrue();
+                players2.setvisibilitytrue();
+                player1.setvisibilityfalse();
+                player2.setvisibilityfalse();
+            }
+        }
+        if (mode == 3){
+            mousehit.setvisibilitytrue();
+            player1.setvisibilitytrue();
+            player2.setvisibilitytrue();
+            players2.setvisibilityfalse();
+        }
+    }
+    public boolean getStartside(){
+        int ram = (int) (Math.random() * 2);
+        if (ram == 0){
+            return false;
+        }
+        if (ram == 1){
+            return true;
+        }
+        return false;
+    }
+    public void ballLogic(){
+        if (ballx > getWidth() - 30 || ballx < 0){
+            System.out.println(true);
+            gameend = true;
+            mode = 3;
+        }
+    }
+    public void ballcollision(){
+
+    }
+}
