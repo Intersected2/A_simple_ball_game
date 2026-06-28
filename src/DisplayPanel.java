@@ -24,14 +24,23 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
     private Timer mode_0;
     private int startside;
     private int velocityx; //ball
+    private int startingvx;
     private int velocityy;
     private int v1;  //sliders
     private int v2;
     private Timer time;
     private int ballx;
     private int bally;
-    private boolean gameend;
+    private boolean scored;
     private boolean start;
+    private Scoreboard scoreboard;
+    private Timer cooldown;
+    private Timer blink;
+    private boolean blinking;
+    private int blinks;
+    private int hits;
+    private Timer slower;
+    private int speedinc;
 
     public DisplayPanel(){
         addMouseListener(this);
@@ -42,10 +51,11 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         mode = 1;
         mainT = new Timer(10, this);
         time = new Timer(10, this);
-        int ram = (int) (Math.random() * 5000) + 5000;
+        cooldown = new Timer(2500, this);
+        blink = new Timer(400, this);
+        slower = new Timer(300, this);
+        int ram = (int) (Math.random() * 500) + 500;
         mode_0 = new Timer(ram, this);
-        mainT.start();
-        time.start();
         this.mousehit = new Hitbox(mousex, mousey, 1, 1);  //hitbox for mouse
     }
     @Override
@@ -53,7 +63,8 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         if (inital){ // only runs once (for hitboxes create the objects here)
             ballx = getWidth() / 2 - 15;
             bally = getHeight() / 2 - 15;
-            velocityx = 0;
+            startingvx = 3;
+            velocityx = startingvx;
             p1x = 100;
             p1y = getHeight() / 2 - 50;
             p2x = getWidth() - 100;
@@ -62,12 +73,16 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
             this.player1 = new Hitbox(p1x, p1y, 30, 100);
             this.player2 = new Hitbox(p2x, p2y, 30, 100);
             this.ball = new Hitbox(ballx, bally, 30, 30);
+            this.scoreboard = new Scoreboard();
             if (getStartside()){
                 startside = 1;
             }else{
                 startside = -1;
             }
             velocityx *= startside;
+            mainT.start();
+            time.start();
+            slower.start();
             inital = false;
         }
         if (mode == 0){
@@ -104,18 +119,43 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         int ram;
         super.paintComponent(g);
         g.setFont(new Font("Arial", Font.PLAIN, 12));
-        ram = g.getFontMetrics().stringWidth(mousex + " " + mousey);
-        g.drawString(String.valueOf(mousex) + " " + String.valueOf(mousey), getWidth() / 2 - ram / 2, getHeight() / 150 + 7);
+//        ram = g.getFontMetrics().stringWidth(mousex + " " + mousey);
+//        g.drawString(String.valueOf(mousex) + " " + String.valueOf(mousey), getWidth() / 2 - ram / 2, getHeight() / 150 + 7);
+        ram = g.getFontMetrics().stringWidth(ballx + " " + bally);
+        g.drawString(String.valueOf(ballx) + " " + String.valueOf(bally), getWidth() / 2 - ram / 2, getHeight() / 150 + 7);
+        ram = g.getFontMetrics().stringWidth(scoreboard.getp1() + " " + scoreboard.getp2());
+        g.drawString(scoreboard.getp1() + " " + scoreboard.getp2(), getWidth() / 2 - ram / 2, getHeight() / 150 + 15);
         g.drawLine(getWidth() / 2, getHeight(), getWidth() / 2, 0);
         g.setColor(new Color(70, 154, 223, 255));
         g.fillRect(p1x, p1y, 30, 100);
         g.setColor(new Color(237, 80, 80, 255));
         g.fillRect(p2x, p2y, 30, 100);
         g.setColor(Color.black);
-        g.fillOval(ballx, bally, 30, 30);
+        if (!blinking){
+            g.fillOval(ballx, bally, 30, 30);
+        }
     }
-    public void mode3(){ // endscreen
-
+    public void pscored(){ // when a player scores
+        if (scored){
+            if (ballx < getWidth() / 2){
+                scoreboard.addp2();
+            }
+            if (ballx > getWidth() / 2){
+                scoreboard.addp1();
+            }
+            ballx = (getWidth() / 2) - 15;
+            bally = (getHeight() / 2) - 15;
+            velocityx = startingvx;
+            if (getStartside()){
+                startside = 1;
+            }else{
+                startside = -1;
+            }
+            velocityx *= startside;
+            velocityy = 0;
+            cooldown.start();
+            blink.start();
+        }
     }
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -125,6 +165,8 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
             mousehit.changehitpos(mousex, mousey);
             ballLogic();
             repaint();
+            displayedornot();
+            ballcollision();
         }
         if (e.getSource() == mode_0){
             mode = modequeue;
@@ -133,6 +175,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         }
         if (e.getSource() == time){
             p1y += v1;
+            player1.changehitpos(p1x, p1y);
             if(p1y < 0){
                 v1 = 0;
                 p1y = 0;
@@ -142,6 +185,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
                 p1y = getHeight() - 100;
             }
             p2y += v2;
+            player2.changehitpos(p2x, p2y);
             if(p2y < 0){
                 v2 = 0;
                 p2y = 0;
@@ -150,9 +194,32 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
                 v2 = 0;
                 p2y = getHeight() - 100;
             }
-            if (mode == 2 && start){
+            if (mode == 2 && start && !scored){
+                ballx += velocityx;
+                bally += velocityy;
                 ball.changehitpos(ballx, bally);
             }
+        }
+        if (e.getSource() == cooldown){
+            scored = false;
+            cooldown.stop();
+        }
+        if (e.getSource() == blink){
+            if (!blinking){
+                blinking = true;
+                blinks++;
+            }else {
+                blinking = false;
+                blinks++;
+            }
+            if(blinks >= 6){
+                blinks = 0;
+                blink.stop();
+            }
+        }
+        if (e.getSource() == slower){
+            System.out.println(velocityx);
+            System.out.println(hits);
         }
     }
     @Override
@@ -262,12 +329,40 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
     }
     public void ballLogic(){
         if (ballx > getWidth() - 30 || ballx < 0){
-            System.out.println(true);
-            gameend = true;
-            mode = 3;
+            scored = true;
+            pscored();
         }
     }
     public void ballcollision(){
-
+        if (ball.getHitbox().intersects(player1.getHitbox())){
+            player1.setvisibilityfalse();
+            player2.setvisibilitytrue();
+            ballx = 130;
+            velocityx *= -1;
+            hits++;
+            if (((int) Math.sqrt(hits) * 2) > speedinc){
+                speedinc = (int) Math.sqrt(hits) * 2;
+                if (velocityx > 0){
+                    velocityx++;
+                }else{
+                    velocityx--;
+                }
+            }
+        }
+        if (ball.getHitbox().intersects(player2.getHitbox())){
+            player1.setvisibilitytrue();
+            player2.setvisibilityfalse();
+            ballx = getWidth() - 130;
+            velocityx *= -1;
+            hits++;
+            if (((int) Math.sqrt(hits) * 2) > speedinc){
+                speedinc = (int) Math.sqrt(hits) * 2;
+                if (velocityx > 0){
+                    velocityx++;
+                }else{
+                    velocityx--;
+                }
+            }
+        }
     }
 }
