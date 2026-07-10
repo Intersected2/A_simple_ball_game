@@ -2,7 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-// Notes to self: add an end screen and a 5 sec timer before the game starts
+// Notes to self: add an end screen and a 5 sec timer before the game starts also make velocityy in slower2
 
 public class DisplayPanel extends JPanel implements MouseListener, KeyListener, ActionListener, MouseMotionListener {
     private Point mpos;
@@ -39,7 +39,8 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
     private boolean blinking;
     private int blinks;
     private int hits;
-    private Timer slower;
+    private Timer slower; //for testing I think
+    private Timer slower2; //just for velocityy cuz why not
     private int speedinc;
 
     public DisplayPanel(){
@@ -54,6 +55,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         cooldown = new Timer(2500, this);
         blink = new Timer(400, this);
         slower = new Timer(300, this);
+        slower2 = new Timer(100, this);
         int ram = (int) (Math.random() * 500) + 500;
         mode_0 = new Timer(ram, this);
         this.mousehit = new Hitbox(mousex, mousey, 1, 1);  //hitbox for mouse
@@ -364,5 +366,15 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
                 }
             }
         }
+        if (ball.gety() == 0){
+            velocityy *= -1;
+        }
+        if (ball.gety() == getHeight() - ball.getHeight()){
+            velocityy *= -1;
+        }
+    }
+    public double trulyrandom(){
+        double ram = Math.random();
+
     }
 }

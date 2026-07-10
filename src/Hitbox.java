@@ -32,7 +32,20 @@ public class Hitbox {
     }
     public void setvisibilitytrue(){
         displayed = true;
-    }public void setvisibilityfalse(){
+    }
+    public void setvisibilityfalse(){
         displayed = false;
+    }
+    public int getx(){
+        return x;
+    }
+    public int gety(){
+        return y;
+    }
+    public int getHeight(){
+        return height;
+    }
+    public int getWidth(){
+        return width;
     }
 }
