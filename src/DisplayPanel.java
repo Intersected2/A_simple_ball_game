@@ -2,7 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-// Notes to self: add an end screen and a 5 sec timer before the game starts also make velocityy in slower2
+// Notes to self: add an end screen and a 5 sec timer before the game starts
 
 public class DisplayPanel extends JPanel implements MouseListener, KeyListener, ActionListener, MouseMotionListener {
     private Point mpos;
@@ -42,6 +42,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
     private Timer slower; //for testing I think
     private Timer slower2; //just for velocityy cuz why not
     private int speedinc;
+    private boolean gameend;
 
     public DisplayPanel(){
         addMouseListener(this);
@@ -98,7 +99,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
             mode2(g);
         }
     }
-    public void mode0(Graphics g){
+    public void mode0(Graphics g){ //fake ahh loading screen
         int ram;
         super.paintComponent(g);
         g.fillRect(0, 0, getWidth(), getHeight());
@@ -138,6 +139,11 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
             g.fillOval(ballx, bally, 30, 30);
         }
     }
+    public void mode3(){
+        if (scoreboard.getp1() > 1 && (scoreboard.getp1() - scoreboard.getp2()) > 1){
+            gameend = true;
+        }
+    }
     public void pscored(){ // when a player scores
         if (scored){
             if (ballx < getWidth() / 2){
@@ -161,7 +167,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         }
     }
     @Override
-    public void actionPerformed(ActionEvent e) {
+    public void actionPerformed(ActionEvent e) { //timers its a mess ik
         int ram1 = p1y;
         int ram2 = p2y;
         if (e.getSource() == mainT){
@@ -170,6 +176,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
             repaint();
             displayedornot();
             ballcollision();
+            mode3();
         }
         if (e.getSource() == mode_0){
             mode = modequeue;
@@ -177,7 +184,9 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
             mode_0.stop();
         }
         if (e.getSource() == time){
-            p1y += v1;
+            if(!gameend){
+                p1y += v1;
+            }
             player1.changehitpos(p1x, p1y);
             if(p1y < 0){
                 v1 = 0;
@@ -187,7 +196,9 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
                 v1 = 0;
                 p1y = getHeight() - 100;
             }
-            p2y += v2;
+            if (!gameend){
+                p2y += v2;
+            }
             player2.changehitpos(p2x, p2y);
             if(p2y < 0){
                 v2 = 0;
@@ -197,7 +208,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
                 v2 = 0;
                 p2y = getHeight() - 100;
             }
-            if (mode == 2 && start && !scored){
+            if (mode == 2 && start && !scored && !gameend){
                 ballx += velocityx;
                 ball.changehitpos(ballx, bally);
             }
@@ -219,12 +230,12 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
                 blink.stop();
             }
         }
-        if (e.getSource() == slower){
-            System.out.println(velocityx);
-            System.out.println(hits);
+        if (e.getSource() == slower){ // for testing
+            System.out.println(gameend);
+            System.out.println(velocityy);
         }
         if (e.getSource() == slower2){
-            if (mode == 2 && start && !scored){
+            if (mode == 2 && start && !scored && !gameend){
                 bally += velocityy;
             }
         }
@@ -234,7 +245,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
 
     }
     @Override
-    public void keyPressed(KeyEvent e) {
+    public void keyPressed(KeyEvent e) { //movement for the paddles
         int ram = e.getKeyCode();
         if (ram == KeyEvent.VK_A){
             v1 = -5;
@@ -252,7 +263,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         player2.changehitpos(p2x, p2y);
     }
     @Override
-    public void keyReleased(KeyEvent e) {
+    public void keyReleased(KeyEvent e) { //a bug turned feature
 //        int ram = e.getKeyCode();
 //        if (ram == KeyEvent.VK_A){
 //            v1 = 0;
@@ -268,7 +279,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
 //        }
     }
     @Override
-    public void mouseClicked(MouseEvent e) {
+    public void mouseClicked(MouseEvent e) { //checks if mouse hitbox is in the button hitbox
         if (mousehit.getvisibility() && mousehit.getHitbox().intersects(players2.getHitbox())){
             mode = 0;
             modequeue = 2;
@@ -334,28 +345,28 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         }
         return false;
     }
-    public void ballLogic(){
+    public void ballLogic(){ //just checks if the ball scores or nah
         if (ballx > getWidth() - 30 || ballx < 0){
             scored = true;
             pscored();
         }
     }
-    public void ballcollision(){
+    public void ballcollision(){ //checks for collisions for the ball
         int ram = 0;
         int ram1 = 0;
         int ram2 = 0;
         if (ball.getHitbox().intersects(player1.getHitbox())){
             player1.setvisibilityfalse();
             player2.setvisibilitytrue();
+            ballx = 130;
             ram = (int) (Math.random() * 2);
-            ram2 = ((ball.gety() + (ball.getHeight() / 2)) - (player1.getx() + (player1.getHeight() / 2))) / 30;
-            ram1 = (int) (Math.random() * 3);
+            ram2 = ((ball.gety() + (ball.getHeight() / 2)) - (player1.gety() + (player1.getHeight() / 2))) / 30;
+//            ram1 = (int) (Math.random() * 2);
             ram1 += ram2;
             if (ram == 0){
                 ram1 *= -1;
             }
             velocityy = ram1;
-            ballx = 130;
             velocityx *= -1;
             hits++;
             if (((int) Math.sqrt(hits) * 2) > speedinc){
@@ -370,13 +381,15 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         if (ball.getHitbox().intersects(player2.getHitbox())){
             player1.setvisibilitytrue();
             player2.setvisibilityfalse();
+            ballx = getWidth() - 130;
             ram = (int) (Math.random() * 2);
-            ram1 = (int) (Math.random() * 3);
+            ram2 = ((ball.gety() + (ball.getHeight() / 2)) - (player2.gety() + (player2.getHeight() / 2))) / 10;
+//            ram1 = (int) (Math.random() * 2);
+            ram1 += ram2;
             if (ram == 0){
                 ram1 *= -1;
             }
             velocityy = ram1;
-            ballx = getWidth() - 130;
             velocityx *= -1;
             hits++;
             if (((int) Math.sqrt(hits) * 2) > speedinc){
@@ -396,9 +409,5 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
             bally = getHeight() - ball.getHeight() - 1;
             velocityy *= -1;
         }
-    }
-    public double trulyrandom(){
-        double ram = Math.random();
-        return ram;
     }
 }
