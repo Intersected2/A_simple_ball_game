@@ -43,6 +43,8 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
     private Timer slower2; //just for velocityy cuz why not
     private int speedinc;
     private boolean gameend;
+    private Timer delay;
+    private int delay_ram;
 
     public DisplayPanel(){
         addMouseListener(this);
@@ -57,6 +59,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         blink = new Timer(400, this);
         slower = new Timer(300, this);
         slower2 = new Timer(15, this);
+        delay = new Timer(1000, this);
         int ram = (int) (Math.random() * 500) + 500;
         mode_0 = new Timer(ram, this);
         this.mousehit = new Hitbox(mousex, mousey, 1, 1);  //hitbox for mouse
@@ -72,6 +75,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
             p1y = getHeight() / 2 - 50;
             p2x = getWidth() - 100;
             p2y = getHeight() / 2 - 50;
+            delay_ram = 5;
             this.players2 = new Hitbox(getWidth() / 4, getHeight() / 2, 300, 150); // button for 1 player
             this.player1 = new Hitbox(p1x, p1y, 30, 100);
             this.player2 = new Hitbox(p2x, p2y, 30, 100);
@@ -120,8 +124,11 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
 
     }
     public void mode2(Graphics g){ //displays what happens when game starts
+        Graphics2D g2d = (Graphics2D) g;
         int ram;
+        int ram1;
         super.paintComponent(g);
+        g.setColor(Color.BLACK);
         g.setFont(new Font("Arial", Font.PLAIN, 12));
         ram = g.getFontMetrics().stringWidth(mousex + " " + mousey);
         g.drawString(String.valueOf(mousex) + " " + String.valueOf(mousey), getWidth() / 2 - ram / 2, getHeight() / 150 + 7);
@@ -137,6 +144,16 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         g.setColor(Color.black);
         if (!blinking){
             g.fillOval(ballx, bally, 30, 30);
+        }
+        if (delay_ram > -1 && delay.isRunning()){
+            g.fillRect(getWidth() / 2 - 50, getHeight() / 2 - 50, 100, 100);
+            g.setColor(Color.WHITE);
+            g.fillRect(getWidth() / 2 - 40, getHeight() / 2 - 40, 80, 80);
+            g.setColor(Color.BLACK);
+            g.setFont(new Font("Arial", Font.PLAIN, 30));
+            ram = g.getFontMetrics().stringWidth(String.valueOf(delay_ram));
+            ram1 = g.getFontMetrics().getHeight();
+            g.drawString(String.valueOf(delay_ram), getWidth() / 2 - ram / 2, getHeight() / 2 + 8);
         }
     }
     public void mode3(){
@@ -171,8 +188,6 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
     }
     @Override
     public void actionPerformed(ActionEvent e) { //timers its a mess ik
-        int ram1 = p1y;
-        int ram2 = p2y;
         if (e.getSource() == mainT){
             mousehit.changehitpos(mousex, mousey);
             ballLogic();
@@ -183,6 +198,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         }
         if (e.getSource() == mode_0){
             mode = modequeue;
+            delay.start();
             displayedornot();
             mode_0.stop();
         }
@@ -242,6 +258,14 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
                 bally += velocityy;
             }
         }
+        if (e.getSource() == delay){
+            if (delay_ram < 1){
+                start = true;
+                delay.stop();
+            }else{
+                delay_ram--;
+            }
+        }
     }
     @Override
     public void keyTyped(KeyEvent e) {
@@ -285,8 +309,8 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
     public void mouseClicked(MouseEvent e) { //checks if mouse hitbox is in the button hitbox
         if (mousehit.getvisibility() && mousehit.getHitbox().intersects(players2.getHitbox())){
             mode = 0;
+            delay_ram = 5;
             modequeue = 2;
-            start = true;
             displayedornot();
             mode_0.start();
         }
