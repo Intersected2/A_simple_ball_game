@@ -66,7 +66,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         if (inital){ // only runs once (for hitboxes create the objects here)
             ballx = getWidth() / 2 - 15;
             bally = getHeight() / 2 - 15;
-            startingvx = 3;
+            startingvx = 5;
             velocityx = startingvx;
             p1x = 100;
             p1y = getHeight() / 2 - 50;
@@ -140,7 +140,10 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         }
     }
     public void mode3(){
-        if (scoreboard.getp1() > 1 && (scoreboard.getp1() - scoreboard.getp2()) > 1){
+        if (scoreboard.getp1() > 3 && (scoreboard.getp1() - scoreboard.getp2()) > 1){
+            gameend = true;
+        }
+        if (scoreboard.getp2() > 3 && (scoreboard.getp2() - scoreboard.getp1()) > 1){
             gameend = true;
         }
     }
