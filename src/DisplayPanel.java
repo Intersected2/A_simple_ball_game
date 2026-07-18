@@ -45,6 +45,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
     private boolean gameend;
     private Timer delay;
     private int delay_ram;
+    private int pointsneeded;
 
     public DisplayPanel(){
         addMouseListener(this);
@@ -52,6 +53,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         addMouseMotionListener(this);
         setFocusable(true);
         requestFocusInWindow();
+        pointsneeded = 1;
         mode = 1;
         mainT = new Timer(10, this);
         time = new Timer(10, this);
@@ -101,6 +103,9 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         }
         if (mode == 2){
             mode2(g);
+        }
+        if (mode == 3){
+            mode3(g);
         }
     }
     public void mode0(Graphics g){ //fake ahh loading screen
@@ -156,13 +161,8 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
             g.drawString(String.valueOf(delay_ram), getWidth() / 2 - ram / 2, getHeight() / 2 + 8);
         }
     }
-    public void mode3(){
-        if (scoreboard.getp1() > 3 && (scoreboard.getp1() - scoreboard.getp2()) > 1){
-            gameend = true;
-        }
-        if (scoreboard.getp2() > 3 && (scoreboard.getp2() - scoreboard.getp1()) > 1){
-            gameend = true;
-        }
+    public void mode3(Graphics g){
+        super.paintComponent(g);
     }
     public void pscored(){ // when a player scores
         if (scored){
@@ -194,7 +194,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
             repaint();
             displayedornot();
             ballcollision();
-            mode3();
+            checkmode3();
         }
         if (e.getSource() == mode_0){
             mode = modequeue;
@@ -435,6 +435,14 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         if (ball.gety() > getHeight() - ball.getHeight()){
             bally = getHeight() - ball.getHeight() - 1;
             velocityy *= -1;
+        }
+    }
+    public void checkmode3(){
+        if (scoreboard.getp1() > pointsneeded && (scoreboard.getp1() - scoreboard.getp2()) > 1){
+            gameend = true;
+        }
+        if (scoreboard.getp2() > pointsneeded && (scoreboard.getp2() - scoreboard.getp1()) > 1){
+            gameend = true;
         }
     }
 }
