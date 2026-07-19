@@ -2,7 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-// Notes to self: add an end screen and a 5 sec timer before the game starts
+// Notes to self: add a button on the end screen that sends you back to the menu
 
 public class DisplayPanel extends JPanel implements MouseListener, KeyListener, ActionListener, MouseMotionListener {
     private Point mpos;
