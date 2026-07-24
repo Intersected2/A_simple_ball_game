@@ -56,7 +56,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         setFocusable(true);
         requestFocusInWindow();
         pointsneeded = 1;
-        mode = 3;
+        mode = 1;
         mainT = new Timer(10, this);
         time = new Timer(10, this);
         cooldown = new Timer(2500, this);
